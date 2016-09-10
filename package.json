@@ -1,7 +1,7 @@
 {
   "name": "hubot-spark",
   "version": "1.7.1",
-  "author": "Anthony Shaw",
+  "author": "Witit",
   "keywords": [
     "github hubot cisco spark adapter"
   ],
@@ -17,7 +17,7 @@
     "url": "git://github.com/tonybaloney/hubot-spark.git"
   },
   "dependencies": {
-    "csco-spark": "3.1.0",
+    "csco-spark": "https://github.com/witit13/csco-spark/tarball/master",
     "hubot": ">=2.3.0",
     "request": "2.9.3"
   },
