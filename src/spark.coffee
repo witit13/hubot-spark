@@ -100,7 +100,7 @@ class SparkRealtime extends EventEmitter
   listen: (date, callback) ->
     # Create a callback hook for each room
     @room_ids.forEach (room_id) =>
-      @spark.getMessages(roomId: room_id).then (msges) =>
+      @spark.getMeMessages(roomId: room_id).then (msges) =>
         msges.forEach((msg) =>
           if Date.parse(msg.created) > Date.parse(date)
             @robot.logger.debug "Matched new message #{msg.text}"
