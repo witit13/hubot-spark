@@ -56,7 +56,7 @@ class SparkAdapter extends Adapter
       @robot.logger.debug "Fired listener callback for #{room_id}"
       messages.forEach (message) =>
         # checking message is received from valid group
-        if room_id in bot.room_ids
+        #if room_id in bot.room_ids
           text = message.text
           user_name = message.personEmail
           user =
@@ -65,8 +65,8 @@ class SparkAdapter extends Adapter
               room: message.roomId
           @robot.logger.debug "received #{text} from #{user.name}"
           @robot.receive new TextMessage user, text
-        else
-          @robot.logger.debug "received #{text} from #{room_id} but not a room we listen to."
+        #else
+        #  @robot.logger.debug "received #{text} from #{room_id} but not a room we listen to."
     @robot.logger.debug "Done with custom bot logic"
     @bot = bot
     @emit 'connected'
