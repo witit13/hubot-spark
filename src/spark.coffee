@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ///
-
+util = require('util');
 Robot   = require('hubot').Robot
 Adapter = require('hubot').Adapter
 TextMessage = require('hubot').TextMessage
@@ -49,24 +49,10 @@ class SparkAdapter extends Adapter
     options =
      api_uri: process.env.HUBOT_SPARK_API_URI or "https://api.ciscospark.com/v1"
      access_token: process.env.HUBOT_SPARK_ACCESS_TOKEN
-     rooms      : process.env.HUBOT_SPARK_ROOMS
+     bot_id      : process.env.HUBOT_SPARK_BOT_ID
     bot = new SparkRealtime(options, @robot)
     @robot.logger.debug "Created bot, setting up listeners"
-    bot.listen new Date().toISOString(), (messages, room_id, last_date) =>
-      @robot.logger.debug "Fired listener callback for #{room_id}"
-      messages.forEach (message) =>
-        # checking message is received from valid group
-        #if room_id in bot.room_ids
-          text = message.text
-          user_name = message.personEmail
-          user =
-              name: message.personEmail
-              id: message.personId
-              room: message.roomId
-          @robot.logger.debug "received #{text} from #{user.name}"
-          @robot.receive new TextMessage user, text
-        #else
-        #  @robot.logger.debug "received #{text} from #{room_id} but not a room we listen to."
+    
     @robot.logger.debug "Done with custom bot logic"
     @bot = bot
     @emit 'connected'
@@ -88,36 +74,34 @@ class SparkRealtime extends EventEmitter
         @robot.logger.info "Created connection instance to spark"
       catch e
         throw new Error "Failed to connect #{e.message}"
-      @room_ids = []
-      options.rooms.split(',').forEach (room_id) =>
-        @room_ids.push room_id
         
       @robot.logger.debug "Completed adding rooms to list"
+
+      @robot.router.post "/webhook", (req, res) =>
+        @robot.logger.debug "received message id #{req.body.data.id} from #{req.body.data.personEmail}"
+        if req.body.actorId != options.bot_id
+          @spark.getMessage(req.body.data.id).then (body) =>
+            message = JSON.parse(body)
+            text = message.text
+            user_name = message.personEmail
+            user =
+              name: message.personEmail
+              id: message.personId
+              room: message.roomId
+            @robot.logger.debug "received #{text} from #{user.name} message:"+util.inspect(message, false, null)
+            @robot.receive new TextMessage user, text
+
      else
        throw new Error "Not enough parameters provided. I need an access token"
  
   ## Spark API call methods
-  listen: (date, callback) ->
-    # Create a callback hook for each room
-    @room_ids.forEach (room_id) =>
-      @spark.getMeMessages(roomId: room_id).then (msges) =>
-        msges.forEach((msg) =>
-          if Date.parse(msg.created) > Date.parse(date)
-            @robot.logger.debug "Matched new message #{msg.text}"
-            callback [msg], room_id
-        )
-        newDate = new Date().toISOString()
-        setTimeout (=>
-          @listen newDate, callback
-        ), 10000
  
   send: (user, message, room) ->
     @robot.logger.debug "Sending message"
-    @room_ids.forEach (room_id) =>
-      @robot.logger.debug "send message to room #{room_id} with text #{message}"
-      @spark.sendMessage
-        roomId: room_id
-        text: message
+    @robot.logger.debug "send message to room #{user.room} with text #{message}"
+    @spark.sendMessage
+      roomId: user.room
+      text: message
  
   reply: (user, message) ->
     @robot.logger.debug "Replying to message for #{user}"
@@ -125,4 +109,4 @@ class SparkRealtime extends EventEmitter
       @robot.logger.debug "reply message to #{user} with text #{message}"
       @spark.sendMessage
         text: message
-        toPersonEmail: user
+        roomId: user.room
