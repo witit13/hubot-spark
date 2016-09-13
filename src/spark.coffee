@@ -90,6 +90,7 @@ class SparkRealtime extends EventEmitter
               room: message.roomId
             @robot.logger.debug "received #{text} from #{user.name} message:"+util.inspect(message, false, null)
             @robot.receive new TextMessage user, text
+        res.send("Thanks")
 
      else
        throw new Error "Not enough parameters provided. I need an access token"
