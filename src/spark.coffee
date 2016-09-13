@@ -100,7 +100,7 @@ class SparkRealtime extends EventEmitter
   send: (user, message, room) ->
     @robot.logger.debug "Sending message"
     @robot.logger.debug "send message to room #{user.room} with text #{message}"
-    if message.match /https?:\/\/.*\.(?:png|jpg)/i
+    if message.match /https?:\/\/.*\.(?:png|jpe?g|gif)/i
       @robot.logger.debug "File"
       @spark.sendMessage
         roomId: user.room
